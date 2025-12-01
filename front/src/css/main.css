@@ -1,0 +1,173 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: aquamarine;
+    font-family: Arial, sans-serif;
+}
+
+.persons {
+    margin-top: 10px;
+}
+
+.buttons-menu button {
+    padding: 10px;
+    margin-right: 10px;
+    border: 0;
+    flex-grow: 1;
+    background-color: azure;
+}
+
+.buttons-menu {
+    display: flex;
+    gap: 10px;
+}
+.buttons-menu button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+
+.persons-table-wr {
+    max-width: 100%;
+    overflow-x: auto; /* Добавляем горизонтальную прокрутку */
+    margin-bottom: 20px;
+    margin-top: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.persons-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.persons-table th, .persons-table td {
+    border: 1px solid azure;
+    padding: 8px;
+}
+
+.persons-table th {
+    background-color: azure;
+    text-align: left;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header button,
+.pagination button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.header {
+    color: azure;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: cadetblue;
+}
+
+.left select {
+    padding: 4px 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+
+}
+
+.left select:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.right {
+    display: flex;
+    gap: 10px; /* Расстояние между элементами */
+    align-items: center;
+}
+
+
+.add-component {
+    margin-top: 7px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-add {
+    width: 50%;
+}
+
+.form-add input:not([type="checkbox"]),
+.form-add select,
+.form-add button {
+    padding: 7px;
+    width: 100%;
+    margin-bottom: 7px;
+    border: 0;
+    background-color: azure;
+    outline: none;
+}
+
+.form-add input[type="checkbox"] {
+    margin-bottom: 7px;
+    transform: scale(1.2);
+    margin-left: 12px;
+}
+
+.form-add button:hover {
+    transform: scale(1.005);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.error-field {
+    color: red;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+    margin-left: 15px;
+}
+
+.filters input {
+    padding: 8px;
+    border: 1px solid #4677d3;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.full {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+.full input {
+    padding: 5px;
+    border: 1px solid #4677d3;
+    border-radius: 12px;
+    font-size: 14px;
+    margin: 8px;
+}
+.full button {
+    padding: 10px;
+    border: 0;
+    flex-grow: 1;
+    background-color: azure;
+    border-radius: 15px;
+    margin: 5px;
+}

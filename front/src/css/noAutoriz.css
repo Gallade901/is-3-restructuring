@@ -1,0 +1,54 @@
+.authorization {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+}
+
+.authorization h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.authorization-form {
+    width: 300px;
+}
+
+.authorization-form form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.authorization-form input, .authorization-form select {
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+.authorization-form button {
+    margin-top: 15px;
+    padding: 5px;
+}
+
+.nav-link {
+    padding: 7px;
+    background-color: azure;
+    color: #333;
+    text-decoration: none;
+    border-radius: 20px;
+}
+
+.nav-link.active {
+    color: #000;
+}
+
+.response-msg {
+    margin-top: 20px;
+    color: cornflowerblue;
+    padding: 7px;
+}
+.error-msg {
+    margin-top: 20px;
+    color: #ff3434;
+    font-weight: bold;
+}
