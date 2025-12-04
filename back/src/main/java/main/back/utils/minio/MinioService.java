@@ -7,6 +7,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
@@ -32,12 +34,16 @@ public class MinioService {
     }
 
     public String getFileUrl(String fileName) throws Exception {
+        Map<String, String> reqParams = new HashMap<>();
+        reqParams.put("response-content-disposition", "attachment; filename=\"" + fileName + "\"");
+
         return minioConfig.getMinioClient().getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket(minioConfig.getBucketName())
                         .object(fileName)
                         .expiry(7, TimeUnit.DAYS)
+                        .extraQueryParams(reqParams)
                         .build());
     }
 
@@ -65,4 +71,5 @@ public class MinioService {
             return false;
         }
     }
+
 }

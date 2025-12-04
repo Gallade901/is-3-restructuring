@@ -20,15 +20,17 @@ import main.back.user.model.User;
 import main.back.utils.cache.CacheStatisticsLogging;
 import main.back.utils.minio.ImportTransactionService;
 import main.back.utils.minio.MinioService;
-import org.w3c.dom.ls.LSOutput;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
-import javax.naming.InitialContext;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import java.util.Map;
+
+
 
 //@Singleton
 @RequestScoped
@@ -51,51 +53,63 @@ public class PersonController {
             emf.close();
         }
     }
+
     @POST
     @Path("/import-file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response importPersonsFromFile(
-            @FormDataParam("file") InputStream fileInputStream,
-            @FormDataParam("file") FormDataContentDisposition fileDetail,
-            @FormDataParam("login") String login) {
-
-        if (fileInputStream == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Файл не предоставлен")
-                    .build();
-        }
-
+    public Response importPersonsFromFile(MultipartFormDataInput input) {
         try {
-            // Создаем final копии переменных для использования в лямбде
-            final String finalLogin = login;
-            final InputStream finalFileInputStream = fileInputStream;
-            final FormDataContentDisposition finalFileDetail = fileDetail;
+
+            // Получаем части multipart запроса
+            Map<String, List<InputPart>> formDataMap = input.getFormDataMap();
+
+            // Получаем файл
+            List<InputPart> fileParts = formDataMap.get("file");
+            if (fileParts == null || fileParts.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Файл не предоставлен")
+                        .build();
+            }
+
+            InputPart filePart = fileParts.get(0);
+            InputStream fileInputStream = filePart.getBody(InputStream.class, null);
+
+            // Получаем логин
+            List<InputPart> loginParts = formDataMap.get("login");
+            if (loginParts == null || loginParts.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Логин не предоставлен")
+                        .build();
+            }
+
+            String login = loginParts.get(0).getBody(String.class, null);
+            String fileName = getFileName(filePart);
+
 
             // Создаем запись истории импорта
             User user = em.createQuery("SELECT u FROM User u WHERE u.login = :login", User.class)
-                    .setParameter("login", finalLogin)
+                    .setParameter("login", login)
                     .getSingleResult();
 
-            final ImportHistory importHistory = new ImportHistory(user, "IN_PROGRESS", 0, LocalDateTime.now());
+            ImportHistory importHistory = new ImportHistory(user, "IN_PROGRESS", 0, LocalDateTime.now());
 
             // Читаем и парсим JSON из файла
-            String fileContent = readInputStreamToString(finalFileInputStream);
-            final List<PersonDtoImport> personImportDtos = parseJsonToDtoList(fileContent);
+            String fileContent = readInputStreamToString(fileInputStream);
+            List<PersonDtoImport> personImportDtos = parseJsonToDtoList(fileContent);
 
             // Сбрасываем поток для повторного использования
-            final InputStream resetInputStream = new java.io.ByteArrayInputStream(fileContent.getBytes());
+            InputStream resetInputStream = new java.io.ByteArrayInputStream(fileContent.getBytes());
 
             // Выполняем распределенную транзакцию
             boolean success = transactionService.executeImportTransaction(
                     em,
                     resetInputStream,
-                    finalFileDetail.getFileName(),
+                    fileName,
                     "application/json",
                     fileContent.length(),
                     importHistory,
                     () -> {
-                        // Лямбда с операцией импорта в БД
                         performDatabaseImport(personImportDtos, user, importHistory);
                     }
             );
@@ -117,6 +131,18 @@ public class PersonController {
         }
     }
 
+    private String getFileName(InputPart part) {
+        String[] contentDisposition = part.getHeaders().getFirst("Content-Disposition").split(";");
+        for (String filename : contentDisposition) {
+            if ((filename.trim().startsWith("filename"))) {
+                String[] name = filename.split("=");
+                String finalFileName = name[1].trim().replaceAll("\"", "");
+                return finalFileName;
+            }
+        }
+        return "unknown.json";
+    }
+
     private String readInputStreamToString(InputStream inputStream) throws Exception {
         try (java.util.Scanner scanner = new java.util.Scanner(inputStream).useDelimiter("\\A")) {
             return scanner.hasNext() ? scanner.next() : "";
@@ -125,6 +151,11 @@ public class PersonController {
 
     private List<PersonDtoImport> parseJsonToDtoList(String jsonContent) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
+        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
         return mapper.readValue(jsonContent,
                 mapper.getTypeFactory().constructCollectionType(List.class, PersonDtoImport.class));
     }
@@ -135,7 +166,6 @@ public class PersonController {
         for (PersonDtoImport dto : personImportDtos) {
             String name = dto.getName().trim();
 
-            // Проверка существования персонажа
             TypedQuery<Long> query = em.createQuery(
                     "SELECT COUNT(p) FROM Person p WHERE p.name = :name", Long.class);
             query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
@@ -146,7 +176,6 @@ public class PersonController {
                 throw new RuntimeException("Персонаж с именем '" + name + "' уже существует");
             }
 
-            // Создание сущностей...
             Coordinates coordinates = new Coordinates(
                     dto.getCoordinateX(),
                     dto.getCoordinateY(),
@@ -253,7 +282,7 @@ public class PersonController {
 
     @GET
     @Path("/import-history/{id}/file")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response downloadImportFile(@PathParam("id") Long importHistoryId) {
         try {
             ImportHistory history = em.find(ImportHistory.class, importHistoryId);
@@ -262,7 +291,13 @@ public class PersonController {
             }
 
             String downloadUrl = minioService.getFileUrl(history.getFileName());
-            return Response.temporaryRedirect(java.net.URI.create(downloadUrl)).build();
+
+            // Возвращаем JSON с URL вместо редиректа
+            Map<String, String> response = new HashMap<>();
+            response.put("url", downloadUrl);
+            response.put("fileName", history.getFileName());
+
+            return Response.ok(response).build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();

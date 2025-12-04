@@ -26,7 +26,7 @@ public class ImportTransactionService {
         EntityTransaction transaction = em.getTransaction();
         String storedFileName = null;
 
-        try {
+        try { //openXA
             // Фаза 1: Подготовка - сохраняем файл в MinIO
             transaction.begin();
             em.persist(importHistory);

@@ -50,16 +50,28 @@ const ImportHistory = () => {
                 {
                     method: 'GET',
                     credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                 }
             );
 
             if (response.ok) {
-                // Перенаправление на presigned URL
-                window.location.href = response.url;
+                const data = await response.json();
+
+                // Создаем временную ссылку для скачивания
+                const link = document.createElement('a');
+                link.href = data.url;
+                link.download = fileName || 'download';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
             } else {
                 alert('Ошибка при скачивании файла');
             }
         } catch (error) {
+            console.error('Download error:', error);
             alert('Ошибка при скачивании файла');
         }
     };

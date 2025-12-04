@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "cors": {
+    "allowed_origins": [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000"
+    ],
+    "allowed_methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "HEAD"
+    ],
+    "allowed_headers": [
+      "Authorization",
+      "Content-Type",
+      "X-Amz-Date",
+      "X-Amz-Content-Sha256",
+      "Content-Range",
+      "Content-Disposition",
+      "Cache-Control",
+      "Origin",
+      "Accept",
+      "X-Requested-With"
+    ],
+    "expose_headers": [
+      "Date",
+      "Etag",
+      "Server",
+      "Connection",
+      "Accept-Ranges",
+      "Content-Range",
+      "Content-Encoding",
+      "Content-Length",
+      "Content-Type",
+      "Content-Disposition",
+      "Last-Modified",
+      "Content-Language",
+      "Cache-Control",
+      "Retry-After",
+      "X-Amz-Bucket-Region",
+      "Expires",
+      "X-Amz*"
+    ],
+    "max_age_seconds": 3600,
+    "allow_credentials": true
+  }
+}

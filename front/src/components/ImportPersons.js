@@ -114,7 +114,7 @@ const ImportPersons = () => {
                 }, 2000);
             } else {
                 const errorText = await response.text();
-                setImportResult(`❌ Ошибка: ${errorText}`);
+                setImportResult(`❌ Ошибка: ${errorText} проверьте имена персонажей и работу сервисов`);
             }
         } catch (error) {
             setImportResult(`❌ Ошибка: ${error.message}`);
